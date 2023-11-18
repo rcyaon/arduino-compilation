@@ -1,101 +1,49 @@
-#define movementDetection  HIGH
+const int trigPin = 9;  // Trigger pin of the ultrasonic sensor
+const int echoPin = 10;  // Echo pin of the ultrasonic sensor
+const int numLeds = 5;   // Number of LEDs in the linear motion
+const int ledPinStart = 2;  // Starting digital pin for the LEDs
 
-#define LEDon              HIGH
-#define LEDoff             LOW
+long duration;
+int distance;
 
-#define enabled            true
-#define disabled           false
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 
+  // Set LED pins as OUTPUT
+  for (int i = 0; i < numLeds; i++) {
+    pinMode(ledPinStart + i, OUTPUT);
+  }
+}
 
-const byte heartbeatLED  = 13;
-const byte  led          = 8;
-const byte  pir          = 2;
+void loop() {
+  // Trigger the ultrasonic sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
 
-bool autoOffFlag         = disabled;
+  // Read the duration of the ultrasonic pulse
+  duration = pulseIn(echoPin, HIGH);
 
-byte lastPIRstate        = !movementDetection;
-byte val;
-byte state               = 0;
-byte LEDstate            = LEDoff;
+  // Calculate the distance based on the speed of sound
+  distance = duration * 0.034 / 2;
 
+  // Map the distance to the number of LEDs
+  int numLedsToLight = map(distance, 5, 100, 0, numLeds);
+  numLedsToLight = constrain(numLedsToLight, 0, numLeds);
 
-// Timing 
-const unsigned long timeoutDuration = 15 * 60 * 1000ul; //15 minutes
-
-unsigned long heartbeatMillis;
-unsigned long switchMillis;
-unsigned long autoMillis;
-
-void setup()
-{
-  pinMode(heartbeatLED, OUTPUT);
-
-  //turn the light OFF
-  digitalWrite(led, LEDoff);
-  pinMode(led, OUTPUT);
-
-  pinMode(pir, INPUT);
-
-} 
-
-void loop()
-{
-
-  if (millis() - heartbeatMillis >= 500)
-  {
-    heartbeatMillis = millis();
-
-    digitalWrite(heartbeatLED, !digitalRead(heartbeatLED));
+  // Turn on LEDs based on the calculated distance
+  for (int i = 0; i < numLeds; i++) {
+    digitalWrite(ledPinStart + i, i < numLedsToLight ? HIGH : LOW);
   }
 
-  if (millis() - switchMillis >= 50)
-  {
-    switchMillis = millis();
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.print(" cm | LEDs: ");
+  Serial.println(numLedsToLight);
 
-    checkSwitches();
-  }
-
-  if (autoOffFlag == enabled && millis() - autoMillis >= timeoutDuration)
-  {
-    autoOffFlag = disabled;
-
-    LEDstate = LEDoff;
-
-    digitalWrite(led, LEDoff);
-  }
-
-} 
-void checkSwitches()
-{
-
-  byte state = digitalRead(pir);
-
-  if (lastPIRstate != state)
-  {
-    lastPIRstate = state;
-
-    if (state == movementDetection)
-    {
-      LEDstate = !LEDstate;
-
-      digitalWrite(led, LEDstate);
-
-      if (LEDstate == LEDon)
-      {
-        autoOffFlag = enabled;
-
-        autoMillis = millis();
-      }
-
-      else
-      {
-
-        autoOffFlag = disabled;
-      }
-
-    }
-
-  } 
-
-
+  delay(100);  // Adjust the delay based on your requirements
 }
