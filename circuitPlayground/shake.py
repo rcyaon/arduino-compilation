@@ -1,28 +1,24 @@
-#include <Adafruit_CircuitPlayground.h>
+import time
+from adafruit_circuitplayground import cp
 
-void setup() {
-  CircuitPlayground.begin();
-  Serial.begin(9600);
-}
+# Adjust the sensitivity based on your requirements
+sensitivity = 10.0
 
-void loop() {
-  // Read accelerometer values
-  float x, y, z;
-  CircuitPlayground.motionXAccel(&x);
-  CircuitPlayground.motionYAccel(&y);
-  CircuitPlayground.motionZAccel(&z);
+while True:
+    # Read accelerometer values
+    x, y, z = cp.acceleration
 
-  // Adjust the sensitivity based on your requirements
-  float sensitivity = 10.0;
+    # Check if a shake is detected
+    if abs(x) > sensitivity or abs(y) > sensitivity or abs(z) > sensitivity:
+        # Trigger vibration (you may need to adjust the duration)
+        cp.pixels.fill((255, 0, 0))  # Turn on the NeoPixels to red
+        cp.pixels.show()
+        cp.start_tone(1000)  # Start vibration
+        time.sleep(0.5)  # Vibration duration
+        cp.stop_tone()  # Stop vibration
+        cp.pixels.fill((0, 0, 0))  # Turn off the NeoPixels
+        cp.pixels.show()
 
-  // Check if a shake is detected
-  if (abs(x) > sensitivity || abs(y) > sensitivity || abs(z) > sensitivity) {
-    // Trigger vibration (you may need to adjust the duration)
-    CircuitPlayground.startMotor(255);  // 255 is full power
-    delay(500);  // Vibration duration
-    CircuitPlayground.stopMotor();
-  }
+    time.sleep(0.1)  # Adjust the delay based on your requirements
 
-  delay(100);  // Adjust the delay based on your requirements
-}
 
