@@ -1,26 +1,28 @@
-# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
-# SPDX-License-Identifier: MIT
+#include <Adafruit_CircuitPlayground.h>
 
-# bracelet utilizing circuit playground & vibration motors to mediate parkinson's tremors
+void setup() {
+  CircuitPlayground.begin();
+  Serial.begin(9600);
+}
 
-"""This example flashes the little red LED when the Circuit Playground is shaken."""
-import time
-import board
-import pwmio
-from adafruit_motor import servo
-from adafruit_circuitplayground import cp
+void loop() {
+  // Read accelerometer values
+  float x, y, z;
+  CircuitPlayground.motionXAccel(&x);
+  CircuitPlayground.motionYAccel(&y);
+  CircuitPlayground.motionZAccel(&z);
 
-# create a PWMOut object on Pin A2.
-pwm = pwmio.PWMOut(board.A2, frequency=50)
+  // Adjust the sensitivity based on your requirements
+  float sensitivity = 10.0;
 
-# Create a servo object, my_servo.
-my_motor = motor.ContinuousMotor(pwm)
+  // Check if a shake is detected
+  if (abs(x) > sensitivity || abs(y) > sensitivity || abs(z) > sensitivity) {
+    // Trigger vibration (you may need to adjust the duration)
+    CircuitPlayground.startMotor(255);  // 255 is full power
+    delay(500);  // Vibration duration
+    CircuitPlayground.stopMotor();
+  }
 
-while True:
-    if cp.shake(shake_threshold=20):
-    print("activated")
-    my_motor.throttle = 1.0
-    time.sleep(2.0)
-    print("stop")
-    my_servo.throttle = 0.0
-    time.sleep(2.0)
+  delay(100);  // Adjust the delay based on your requirements
+}
+
